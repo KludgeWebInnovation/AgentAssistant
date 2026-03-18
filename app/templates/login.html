@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="page narrow">
+  <div class="section-header">
+    <div>
+      <div class="eyebrow">Single operator login</div>
+      <h2>Sign in</h2>
+    </div>
+  </div>
+  <form method="post" action="/login" class="card form-grid">
+    <label>
+      <span>Username</span>
+      <input type="text" name="username" required>
+    </label>
+    <label>
+      <span>Password</span>
+      <input type="password" name="password" required>
+    </label>
+    <button type="submit">Enter workspace</button>
+  </form>
+</section>
+{% endblock %}
+
