@@ -1,0 +1,4 @@
+company_name,first_name,last_name,job_title,email,linkedin_url,company_website,country,source_system,source_list,notes
+Acme AI,Jane,Ross,Founder,jane@acme.io,https://linkedin.com/in/janeross,https://acme.io,United Kingdom,Cognism,UK founders,Interested in outbound experiments
+Acme AI,Tom,Lee,Head of Sales,tom@acme.io,https://linkedin.com/in/tomlee,https://acme.io,United Kingdom,Cognism,UK founders,Scaling outbound team
+
