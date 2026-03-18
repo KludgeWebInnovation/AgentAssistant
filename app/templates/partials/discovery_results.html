@@ -1,0 +1,15 @@
+{% if suggestions %}
+<div class="cards">
+  {% for item in suggestions %}
+  <article class="card suggestion-card">
+    <strong>{{ item.segment }}</strong>
+    <p><strong>Persona:</strong> {{ item.persona }}</p>
+    <p>{{ item.rationale }}</p>
+    <p class="muted">{{ item.search_hint }}</p>
+  </article>
+  {% endfor %}
+</div>
+{% else %}
+<p class="muted">No suggestions generated yet.</p>
+{% endif %}
+
