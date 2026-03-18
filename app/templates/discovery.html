@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="page">
+  <div class="section-header">
+    <div>
+      <div class="eyebrow">Prospect discovery</div>
+      <h2>Discovery suggestions</h2>
+      <p class="muted">Generate account-hunting prompts based on your current ICP and offer.</p>
+    </div>
+  </div>
+
+  <section class="card">
+    <form
+      method="post"
+      action="/discovery/generate"
+      class="toolbar"
+      hx-post="/discovery/generate"
+      hx-target="#discovery-results"
+      hx-swap="innerHTML"
+    >
+      <input type="number" min="1" max="10" value="5" name="count">
+      <button type="submit">Generate suggestions</button>
+    </form>
+  </section>
+
+  <section class="card" id="discovery-results">
+    {% include "partials/discovery_results.html" %}
+  </section>
+</section>
+{% endblock %}
+
