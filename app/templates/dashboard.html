@@ -41,7 +41,7 @@
         <div class="list-row">
           <div>
             <strong>{{ step.label or ("Step " ~ step.step_order) }}</strong>
-            <div class="muted">{{ step.channel|upper }} · due {{ step.due_date }}</div>
+            <div class="muted">{{ step.channel|upper }} | due {{ step.due_date }}</div>
           </div>
           <span class="pill">{{ step.status.value }}</span>
         </div>
@@ -76,4 +76,3 @@
   </div>
 </section>
 {% endblock %}
-

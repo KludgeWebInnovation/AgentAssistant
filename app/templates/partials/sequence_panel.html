@@ -12,7 +12,7 @@
     <div class="sequence-head">
       <div>
         <strong>{{ step.step_order }}. {{ step.label or ("Step " ~ step.step_order) }}</strong>
-        <div class="muted">{{ step.channel|upper }} · due {{ step.due_date or "-" }}</div>
+        <div class="muted">{{ step.channel|upper }} | due {{ step.due_date or "-" }}</div>
       </div>
       <span class="pill">{{ step.status.value }}</span>
     </div>
@@ -52,4 +52,3 @@
 {% else %}
 <p class="muted">No sequence yet. Generate research first.</p>
 {% endif %}
-

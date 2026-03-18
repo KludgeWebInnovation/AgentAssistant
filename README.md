@@ -38,6 +38,16 @@ uvicorn app.main:app --reload
 
 5. Open `http://127.0.0.1:8000`.
 
+## Demo launcher
+
+For an in-person walkthrough, use the demo launcher:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\start-demo.ps1
+```
+
+It serves the app from a fresh snapshot of your current local database so the demo stays repeatable. The full meeting flow is in `docs/demo-runbook.md`.
+
 ## CSV contract
 
 Required:
@@ -88,4 +98,3 @@ git push -u origin main
 ```
 
 After that, GitHub Actions will run the included CI workflow on push.
-
