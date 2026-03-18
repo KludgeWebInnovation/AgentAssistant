@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="page">
+  <div class="section-header">
+    <div>
+      <div class="eyebrow">Configuration</div>
+      <h2>Settings</h2>
+    </div>
+  </div>
+  <form method="post" action="/settings" class="settings-grid">
+    <section class="card form-grid">
+      <h3>Agency profile</h3>
+      <label><span>Agency name</span><input name="agency_name" value="{{ agency.agency_name }}"></label>
+      <label><span>Website</span><input name="website" value="{{ agency.website }}"></label>
+      <label><span>Positioning</span><textarea name="positioning">{{ agency.positioning }}</textarea></label>
+      <label><span>Value proposition</span><textarea name="value_proposition">{{ agency.value_proposition }}</textarea></label>
+      <label><span>Target region</span><input name="target_region" value="{{ agency.target_region }}"></label>
+    </section>
+
+    <section class="card form-grid">
+      <h3>Offer</h3>
+      <label><span>Service name</span><input name="service_name" value="{{ offer.service_name }}"></label>
+      <label><span>Offer summary</span><textarea name="offer_summary">{{ offer.offer_summary }}</textarea></label>
+      <label><span>Differentiators</span><textarea name="differentiators">{{ offer.differentiators }}</textarea></label>
+      <label><span>Call to action</span><textarea name="call_to_action">{{ offer.call_to_action }}</textarea></label>
+    </section>
+
+    <section class="card form-grid">
+      <h3>ICP</h3>
+      <label><span>Industries</span><textarea name="industries">{{ icp.industries }}</textarea></label>
+      <label><span>Company sizes</span><textarea name="company_sizes">{{ icp.company_sizes }}</textarea></label>
+      <label><span>Personas</span><textarea name="personas">{{ icp.personas }}</textarea></label>
+      <label><span>Pain points</span><textarea name="pain_points">{{ icp.pain_points }}</textarea></label>
+      <label><span>Exclusions</span><textarea name="exclusions">{{ icp.exclusions }}</textarea></label>
+    </section>
+
+    <section class="card form-grid">
+      <h3>Sequence</h3>
+      <label><span>Template name</span><input name="template_name" value="{{ template.name }}"></label>
+      <label><span>Channels</span><input name="channels" value="{{ template.channels }}"></label>
+      <label><span>Delay days</span><input name="delay_days" value="{{ template.delay_days }}"></label>
+      <label><span>Step labels</span><textarea name="step_labels">{{ template.step_labels }}</textarea></label>
+    </section>
+
+    <section class="card form-grid">
+      <h3>Compliance</h3>
+      <label><span>Booking link</span><input name="booking_link" value="{{ compliance.booking_link }}"></label>
+      <label><span>Opt-out text</span><textarea name="opt_out_text">{{ compliance.opt_out_text }}</textarea></label>
+      <label><span>Region</span><input name="region" value="{{ compliance.region }}"></label>
+      <label class="checkbox"><input type="checkbox" name="manual_review_required" {% if compliance.manual_review_required %}checked{% endif %}>Manual review required</label>
+      <label class="checkbox"><input type="checkbox" name="provenance_required" {% if compliance.provenance_required %}checked{% endif %}>Provenance tracking required</label>
+    </section>
+
+    <div class="actions-bar">
+      <button type="submit">Save settings</button>
+    </div>
+  </form>
+</section>
+{% endblock %}
+
