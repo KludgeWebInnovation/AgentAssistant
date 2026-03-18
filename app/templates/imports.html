@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="page">
+  <div class="section-header">
+    <div>
+      <div class="eyebrow">Lead intake</div>
+      <h2>Imports</h2>
+    </div>
+  </div>
+
+  <div class="panel-grid">
+    <section class="card">
+      <h3>Upload CSV</h3>
+      <p class="muted">Supports Cognism exports, Salesforce exports, and manual prospect lists.</p>
+      <form method="post" action="/imports" enctype="multipart/form-data" class="form-grid">
+        <label>
+          <span>CSV file</span>
+          <input type="file" name="file" accept=".csv" required>
+        </label>
+        <button type="submit">Import prospects</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h3>Import history</h3>
+      {% if history %}
+      <div class="list">
+        {% for item in history %}
+        <div class="list-row">
+          <div>
+            <strong>{{ item.name }}</strong>
+            <div class="muted">{{ item.imported_at }} · {{ item.row_count }} rows processed</div>
+          </div>
+          <span class="pill">{{ item.source_type }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="muted">No imports yet.</p>
+      {% endif %}
+    </section>
+  </div>
+</section>
+{% endblock %}
+
