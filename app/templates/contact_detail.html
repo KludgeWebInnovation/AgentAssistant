@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="page">
+  <div class="section-header">
+    <div>
+      <div class="eyebrow">Contact record</div>
+      <h2>{{ contact.display_name }}</h2>
+      <p class="muted">{{ account.company_name }} · {{ contact.job_title or "No title" }}</p>
+    </div>
+    <form method="post" action="/contacts/{{ contact.id }}/generate">
+      <button type="submit">Generate research + sequence</button>
+    </form>
+  </div>
+
+  <div class="detail-grid">
+    <section class="card">
+      <h3>Prospect details</h3>
+      <dl class="meta-list">
+        <div><dt>Email</dt><dd>{{ contact.email or "-" }}</dd></div>
+        <div><dt>LinkedIn</dt><dd>{{ contact.linkedin_url or "-" }}</dd></div>
+        <div><dt>Country</dt><dd>{{ contact.country or account.country or "-" }}</dd></div>
+        <div><dt>Source</dt><dd>{{ contact.source_system or "manual" }}</dd></div>
+        <div><dt>Source list</dt><dd>{{ contact.source_list or "-" }}</dd></div>
+        <div><dt>Status</dt><dd>{{ contact.lead_state.value }}</dd></div>
+      </dl>
+      <form method="post" action="/contacts/{{ contact.id }}/status" class="inline-form">
+        <select name="status">
+          <option value="meeting_booked">Mark meeting booked</option>
+          <option value="do_not_contact">Add to suppression list</option>
+          <option value="disqualified">Mark disqualified</option>
+        </select>
+        <button type="submit">Apply</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h3>Research brief</h3>
+      {% if research %}
+      <p><strong>Summary:</strong> {{ research.summary }}</p>
+      <p><strong>Pain hypothesis:</strong> {{ research.pain_hypothesis }}</p>
+      <p><strong>Personalization:</strong> {{ research.personalization_notes }}</p>
+      <p><strong>Provenance:</strong> {{ research.provenance_summary }}</p>
+      {% else %}
+      <p class="muted">No research brief yet.</p>
+      {% endif %}
+    </section>
+  </div>
+
+  <div class="detail-grid">
+    <section class="card" id="sequence-panel">
+      {% include "partials/sequence_panel.html" %}
+    </section>
+    <section class="card" id="reply-panel">
+      {% include "partials/reply_panel.html" %}
+    </section>
+  </div>
+</section>
+{% endblock %}
+
