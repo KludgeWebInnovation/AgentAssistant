@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="page">
+  <div class="section-header">
+    <div>
+      <div class="eyebrow">Pilot overview</div>
+      <h2>Dashboard</h2>
+    </div>
+    <a href="/imports" class="ghost-button">Import prospects</a>
+  </div>
+
+  <div class="stats-grid">
+    <article class="card stat-card">
+      <span class="stat-label">Contacts</span>
+      <strong>{{ counts.contacts }}</strong>
+    </article>
+    <article class="card stat-card">
+      <span class="stat-label">Due steps</span>
+      <strong>{{ counts.due_steps }}</strong>
+    </article>
+    <article class="card stat-card">
+      <span class="stat-label">Meetings booked</span>
+      <strong>{{ counts.meetings }}</strong>
+    </article>
+    <article class="card stat-card">
+      <span class="stat-label">Suppressed</span>
+      <strong>{{ counts.suppressed }}</strong>
+    </article>
+  </div>
+
+  <div class="panel-grid">
+    <section class="card">
+      <div class="section-header compact">
+        <h3>Due now</h3>
+        <a href="/contacts">Open queue</a>
+      </div>
+      {% if due_steps %}
+      <div class="list">
+        {% for step in due_steps %}
+        <div class="list-row">
+          <div>
+            <strong>{{ step.label or ("Step " ~ step.step_order) }}</strong>
+            <div class="muted">{{ step.channel|upper }} · due {{ step.due_date }}</div>
+          </div>
+          <span class="pill">{{ step.status.value }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="muted">No steps are due today.</p>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <div class="section-header compact">
+        <h3>Recent contacts</h3>
+        <a href="/contacts">See all</a>
+      </div>
+      {% if recent_contacts %}
+      <div class="list">
+        {% for contact in recent_contacts %}
+        <a class="list-row" href="/contacts/{{ contact.id }}">
+          <div>
+            <strong>{{ contact.display_name }}</strong>
+            <div class="muted">{{ contact.job_title or "No title" }}</div>
+          </div>
+          <span class="pill">{{ contact.lead_state.value }}</span>
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="muted">Import a list to start the pilot.</p>
+      {% endif %}
+    </section>
+  </div>
+</section>
+{% endblock %}
+
