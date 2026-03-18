@@ -1,0 +1,4 @@
+company_name,first_name,last_name,job_title,email,linkedin_url,company_website,country,source_system,source_list,notes
+Acme AI,Jane,Ross,Founder,jane@acme.io,https://linkedin.com/in/janeross,https://acme.io,United Kingdom,Salesforce,Webinar follow-up,High intent from webinar list
+Northstar Labs,Alice,Wong,CEO,alice@northstarlabs.co.uk,https://linkedin.com/in/alicewong,https://northstarlabs.co.uk,United Kingdom,Salesforce,ABM shortlist,Requested personalized follow-up
+
