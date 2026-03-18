@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ app_name }}</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div>
+        <div class="eyebrow">Agentic SDR</div>
+        <h1>{{ app_name }}</h1>
+        <p class="muted">Internal outbound operator for research, approvals, and manual execution.</p>
+      </div>
+      {% if current_user %}
+      <nav class="nav">
+        <a href="/">Dashboard</a>
+        <a href="/contacts">Contacts</a>
+        <a href="/imports">Imports</a>
+        <a href="/discovery">Discovery</a>
+        <a href="/settings">Settings</a>
+      </nav>
+      <form method="post" action="/logout" class="logout-form">
+        <button class="ghost-button" type="submit">Sign out</button>
+      </form>
+      {% endif %}
+    </aside>
+    <main class="content">
+      {% if flash %}
+      <div class="flash flash-{{ flash.level }}">{{ flash.message }}</div>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</body>
+</html>
+
