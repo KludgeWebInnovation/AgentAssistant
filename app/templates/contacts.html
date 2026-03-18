@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="page">
+  <div class="section-header">
+    <div>
+      <div class="eyebrow">Prospect workspace</div>
+      <h2>Contacts</h2>
+    </div>
+  </div>
+
+  <form method="get" action="/contacts" class="card toolbar">
+    <input type="text" name="q" value="{{ query }}" placeholder="Search by company, name, or email">
+    <select name="state">
+      <option value="">All states</option>
+      {% for item in states %}
+      <option value="{{ item }}" {% if state == item %}selected{% endif %}>{{ item }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit">Filter</button>
+  </form>
+
+  <section class="card">
+    {% if contacts %}
+    <table>
+      <thead>
+        <tr>
+          <th>Contact</th>
+          <th>Company</th>
+          <th>Source</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for contact in contacts %}
+        <tr>
+          <td>
+            <strong>{{ contact.display_name }}</strong>
+            <div class="muted">{{ contact.job_title or "No title" }}</div>
+          </td>
+          <td>{{ accounts[contact.account_id].company_name if contact.account_id in accounts else "-" }}</td>
+          <td>{{ contact.source_system or "manual" }}</td>
+          <td><span class="pill">{{ contact.lead_state.value }}</span></td>
+          <td><a href="/contacts/{{ contact.id }}">Open</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="muted">No contacts match the current filter.</p>
+    {% endif %}
+  </section>
+</section>
+{% endblock %}
+
