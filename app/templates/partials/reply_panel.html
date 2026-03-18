@@ -1,0 +1,36 @@
+<div class="section-header compact">
+  <h3>Reply assistant</h3>
+</div>
+
+<form
+  method="post"
+  action="/contacts/{{ contact.id }}/reply"
+  class="form-grid"
+  hx-post="/contacts/{{ contact.id }}/reply"
+  hx-target="#reply-panel"
+  hx-swap="innerHTML"
+>
+  <label>
+    <span>Paste inbound reply</span>
+    <textarea name="reply_text" required></textarea>
+  </label>
+  <button type="submit">Draft next response</button>
+</form>
+
+{% if replies %}
+<div class="stack top-gap">
+  {% for reply in replies %}
+  <article class="reply-card">
+    <div class="sequence-head">
+      <strong>{{ reply.reply_intent.value }}</strong>
+      <span class="muted">{{ reply.created_at }}</span>
+    </div>
+    <p>{{ reply.reply_text }}</p>
+    <pre>{{ reply.suggested_response }}</pre>
+  </article>
+  {% endfor %}
+</div>
+{% else %}
+<p class="muted top-gap">No replies logged yet.</p>
+{% endif %}
+
