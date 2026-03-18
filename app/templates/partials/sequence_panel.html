@@ -1,0 +1,55 @@
+<div class="section-header compact">
+  <h3>Sequence</h3>
+  {% if sequence %}
+  <span class="pill">{{ sequence.status }}</span>
+  {% endif %}
+</div>
+
+{% if steps %}
+<div class="stack">
+  {% for step in steps %}
+  <article class="sequence-step">
+    <div class="sequence-head">
+      <div>
+        <strong>{{ step.step_order }}. {{ step.label or ("Step " ~ step.step_order) }}</strong>
+        <div class="muted">{{ step.channel|upper }} · due {{ step.due_date or "-" }}</div>
+      </div>
+      <span class="pill">{{ step.status.value }}</span>
+    </div>
+    {% if step.subject %}
+    <p><strong>Subject:</strong> {{ step.subject }}</p>
+    {% endif %}
+    <pre>{{ step.body }}</pre>
+    <div class="actions-row">
+      {% if step.status.value == "pending" %}
+      <form
+        method="post"
+        action="/steps/{{ step.id }}/approve"
+        hx-post="/steps/{{ step.id }}/approve"
+        hx-target="#sequence-panel"
+        hx-swap="innerHTML"
+      >
+        <button type="submit">Approve step</button>
+      </form>
+      {% endif %}
+      {% if step.status.value == "approved" %}
+      <form
+        method="post"
+        action="/steps/{{ step.id }}/record-send"
+        hx-post="/steps/{{ step.id }}/record-send"
+        hx-target="#sequence-panel"
+        hx-swap="innerHTML"
+        class="inline-form"
+      >
+        <input type="text" name="audit_note" placeholder="Manual send note">
+        <button type="submit">Record manual send</button>
+      </form>
+      {% endif %}
+    </div>
+  </article>
+  {% endfor %}
+</div>
+{% else %}
+<p class="muted">No sequence yet. Generate research first.</p>
+{% endif %}
+
