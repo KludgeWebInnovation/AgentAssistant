@@ -15,16 +15,26 @@ from app.db import get_session, init_db
 from app.models import (
     Account,
     AgencyProfile,
+    ApprovedExample,
     ApprovalTask,
     AuditEvent,
+    CompanyResearchBrief,
     ComplianceSettings,
     Contact,
+    ContactResearchBrief,
+    DraftFeedbackEvent,
+    EvidenceSnippet,
     ICPProfile,
     LeadSource,
     LeadState,
+    MessagingExample,
+    ObjectionRule,
     OfferProfile,
+    ProofPoint,
     ReplyEvent,
     ResearchBrief,
+    ResearchSource,
+    SalesPlaybook,
     Sequence,
     SequenceStep,
     SequenceTemplate,
@@ -34,11 +44,20 @@ from app.models import (
 from app.services.ai import OpenAIService
 from app.services.importer import ImportSummary, import_contacts
 from app.services.replies import handle_reply
-from app.services.sequences import approve_step, generate_research_brief, generate_sequence, pause_contact, record_manual_send
+from app.services.research import ResearchService
+from app.services.sequences import (
+    approve_step,
+    generate_research_brief,
+    generate_sequence,
+    pause_contact,
+    record_manual_send,
+    save_step_feedback,
+)
 
 settings = get_settings()
 templates = Jinja2Templates(directory=str(settings.base_dir / "app" / "templates"))
 ai_service = OpenAIService()
+research_service = ResearchService()
 
 
 class NotAuthenticated(Exception):
@@ -86,6 +105,7 @@ def base_context(request: Request, **extra):
         "app_name": settings.app_name,
         "flash": pop_flash(request),
         "current_user": request.session.get("user"),
+        "current_path": request.url.path,
         "today": date.today(),
         **extra,
     }
@@ -100,12 +120,27 @@ def get_singletons(session: Session):
     return agency, offer, icp, template, compliance
 
 
+def get_playbook_assets(session: Session):
+    playbook = session.exec(select(SalesPlaybook)).first()
+    examples = session.exec(select(MessagingExample).order_by(MessagingExample.updated_at.desc())).all()
+    objections = session.exec(select(ObjectionRule).order_by(ObjectionRule.updated_at.desc())).all()
+    proof_points = session.exec(select(ProofPoint).order_by(ProofPoint.updated_at.desc())).all()
+    approved_examples = session.exec(select(ApprovedExample).order_by(ApprovedExample.created_at.desc())).all()
+    return playbook, examples, objections, proof_points, approved_examples
+
+
 def load_contact_detail(session: Session, contact_id: int):
     contact = session.get(Contact, contact_id)
     if contact is None:
         return None
     account = session.get(Account, contact.account_id)
     research = session.exec(select(ResearchBrief).where(ResearchBrief.contact_id == contact.id)).first()
+    company_research = session.exec(
+        select(CompanyResearchBrief).where(CompanyResearchBrief.account_id == account.id)
+    ).first()
+    contact_research = session.exec(
+        select(ContactResearchBrief).where(ContactResearchBrief.contact_id == contact.id)
+    ).first()
     sequence = session.exec(
         select(Sequence).where(Sequence.contact_id == contact.id).order_by(Sequence.generated_at.desc())
     ).first()
@@ -120,14 +155,48 @@ def load_contact_detail(session: Session, contact_id: int):
     tasks = session.exec(
         select(ApprovalTask).where(ApprovalTask.contact_id == contact.id).order_by(ApprovalTask.created_at.desc())
     ).all()
+    sources = session.exec(
+        select(ResearchSource)
+        .where((ResearchSource.account_id == account.id) | (ResearchSource.contact_id == contact.id))
+        .order_by(ResearchSource.created_at.desc())
+    ).all()
+    company_evidence = []
+    if company_research:
+        company_evidence = session.exec(
+            select(EvidenceSnippet)
+            .where(EvidenceSnippet.company_research_brief_id == company_research.id)
+            .order_by(EvidenceSnippet.created_at.desc())
+        ).all()
+    contact_evidence = []
+    if contact_research:
+        contact_evidence = session.exec(
+            select(EvidenceSnippet)
+            .where(EvidenceSnippet.contact_research_brief_id == contact_research.id)
+            .order_by(EvidenceSnippet.created_at.desc())
+        ).all()
+    feedback_events = session.exec(
+        select(DraftFeedbackEvent).where(DraftFeedbackEvent.contact_id == contact.id).order_by(DraftFeedbackEvent.created_at.desc())
+    ).all()
+    approved_examples = session.exec(
+        select(ApprovedExample).where(ApprovedExample.contact_id == contact.id).order_by(ApprovedExample.created_at.desc())
+    ).all()
+    research_drivers = [item for item in company_evidence + contact_evidence if item.evidence_type == "fact"][:8]
     return {
         "contact": contact,
         "account": account,
         "research": research,
+        "company_research": company_research,
+        "contact_research": contact_research,
+        "research_sources": sources,
+        "company_evidence": company_evidence,
+        "contact_evidence": contact_evidence,
+        "research_drivers": research_drivers,
         "sequence": sequence,
         "steps": steps,
         "replies": replies,
         "tasks": tasks,
+        "feedback_events": feedback_events,
+        "approved_examples": approved_examples,
     }
 
 
@@ -280,6 +349,159 @@ async def update_settings(
     return RedirectResponse("/settings", status_code=303)
 
 
+@app.get("/playbook", response_class=HTMLResponse)
+def playbook_page(
+    request: Request,
+    _: str = Depends(require_auth),
+    session: Session = Depends(get_session),
+):
+    playbook, examples, objections, proof_points, approved_examples = get_playbook_assets(session)
+    return templates.TemplateResponse(
+        "playbook.html",
+        base_context(
+            request,
+            playbook=playbook or SalesPlaybook(),
+            examples=examples,
+            objections=objections,
+            proof_points=proof_points,
+            approved_examples=approved_examples[:10],
+        ),
+    )
+
+
+@app.post("/playbook")
+async def update_playbook(
+    request: Request,
+    positioning_summary: str = Form(""),
+    icp_summary: str = Form(""),
+    persona_guidance: str = Form(""),
+    objection_handling: str = Form(""),
+    proof_points_summary: str = Form(""),
+    compliance_guardrails: str = Form(""),
+    tone_rules: str = Form(""),
+    _: str = Depends(require_auth),
+    session: Session = Depends(get_session),
+):
+    playbook = session.exec(select(SalesPlaybook)).first()
+    if playbook is None:
+        playbook = SalesPlaybook()
+        session.add(playbook)
+
+    playbook.positioning_summary = positioning_summary
+    playbook.icp_summary = icp_summary
+    playbook.persona_guidance = persona_guidance
+    playbook.objection_handling = objection_handling
+    playbook.proof_points_summary = proof_points_summary
+    playbook.compliance_guardrails = compliance_guardrails
+    playbook.tone_rules = tone_rules
+    playbook.updated_at = utcnow()
+
+    session.add(AuditEvent(event_type="playbook_updated", detail="Sales playbook updated."))
+    session.commit()
+    set_flash(request, "Playbook updated.", "success")
+    return RedirectResponse("/playbook", status_code=303)
+
+
+@app.post("/playbook/examples")
+async def add_messaging_example(
+    request: Request,
+    channel: str = Form(...),
+    label: str = Form(...),
+    audience: str = Form(""),
+    content: str = Form(...),
+    outcome_hint: str = Form(""),
+    is_winning: bool = Form(False),
+    _: str = Depends(require_auth),
+    session: Session = Depends(get_session),
+):
+    session.add(
+        MessagingExample(
+            channel=channel,
+            label=label,
+            audience=audience,
+            content=content,
+            outcome_hint=outcome_hint,
+            is_winning=is_winning,
+        )
+    )
+    session.commit()
+    set_flash(request, "Messaging example added.", "success")
+    return RedirectResponse("/playbook", status_code=303)
+
+
+@app.post("/playbook/examples/{example_id}/delete")
+def delete_messaging_example(
+    request: Request,
+    example_id: int,
+    _: str = Depends(require_auth),
+    session: Session = Depends(get_session),
+):
+    example = session.get(MessagingExample, example_id)
+    if example is not None:
+        session.delete(example)
+        session.commit()
+        set_flash(request, "Messaging example removed.", "success")
+    return RedirectResponse("/playbook", status_code=303)
+
+
+@app.post("/playbook/objections")
+async def add_objection_rule(
+    request: Request,
+    objection: str = Form(...),
+    response_guidance: str = Form(...),
+    _: str = Depends(require_auth),
+    session: Session = Depends(get_session),
+):
+    session.add(ObjectionRule(objection=objection, response_guidance=response_guidance))
+    session.commit()
+    set_flash(request, "Objection rule added.", "success")
+    return RedirectResponse("/playbook", status_code=303)
+
+
+@app.post("/playbook/objections/{rule_id}/delete")
+def delete_objection_rule(
+    request: Request,
+    rule_id: int,
+    _: str = Depends(require_auth),
+    session: Session = Depends(get_session),
+):
+    rule = session.get(ObjectionRule, rule_id)
+    if rule is not None:
+        session.delete(rule)
+        session.commit()
+        set_flash(request, "Objection rule removed.", "success")
+    return RedirectResponse("/playbook", status_code=303)
+
+
+@app.post("/playbook/proof-points")
+async def add_proof_point(
+    request: Request,
+    title: str = Form(...),
+    detail: str = Form(...),
+    _: str = Depends(require_auth),
+    session: Session = Depends(get_session),
+):
+    session.add(ProofPoint(title=title, detail=detail))
+    session.commit()
+    set_flash(request, "Proof point added.", "success")
+    return RedirectResponse("/playbook", status_code=303)
+
+
+@app.post("/playbook/proof-points/{proof_id}/delete")
+def delete_proof_point(
+    request: Request,
+    proof_id: int,
+    _: str = Depends(require_auth),
+    session: Session = Depends(get_session),
+):
+    proof = session.get(ProofPoint, proof_id)
+    if proof is not None:
+        session.delete(proof)
+        session.commit()
+        set_flash(request, "Proof point removed.", "success")
+    return RedirectResponse("/playbook", status_code=303)
+
+
 @app.get("/imports", response_class=HTMLResponse)
 def imports_page(
     request: Request,
@@ -370,6 +592,20 @@ def generate_contact_assets(
         set_flash(request, "Contact not found.", "danger")
         return RedirectResponse("/contacts", status_code=303)
     agency, offer, icp, template, compliance = get_singletons(session)
+    playbook, examples, objections, proof_points, approved_examples = get_playbook_assets(session)
+    research_bundle = research_service.collect_bundle(detail["account"], detail["contact"], icp, playbook)
+    company_research, contact_research = research_service.persist_bundle(
+        session,
+        detail["account"],
+        detail["contact"],
+        research_bundle,
+    )
+    evidence = session.exec(
+        select(EvidenceSnippet).where(
+            (EvidenceSnippet.company_research_brief_id == company_research.id)
+            | (EvidenceSnippet.contact_research_brief_id == contact_research.id)
+        )
+    ).all()
     package = ai_service.generate_research_package(
         account_name=detail["account"].company_name,
         company_website=detail["account"].company_website,
@@ -379,12 +615,47 @@ def generate_contact_assets(
         icp=icp,
         compliance=compliance,
         template=template,
+        playbook=playbook,
+        messaging_examples=examples,
+        objection_rules=objections,
+        proof_points=proof_points,
+        approved_examples=approved_examples,
+        company_research=company_research,
+        contact_research=contact_research,
+        evidence_snippets=evidence,
     )
     generate_research_brief(session, detail["contact"], package)
     generate_sequence(session, detail["contact"], template, package)
     session.commit()
-    set_flash(request, "Research brief and sequence regenerated.", "success")
+    set_flash(request, "Research briefs and sequence regenerated.", "success")
     return RedirectResponse(f"/contacts/{contact_id}", status_code=303)
+
+
+@app.post("/steps/{step_id}/save-draft", response_class=HTMLResponse)
+def save_sequence_draft(
+    request: Request,
+    step_id: int,
+    subject: str = Form(""),
+    body: str = Form(""),
+    feedback_note: str = Form(""),
+    save_as_example: bool = Form(False),
+    _: str = Depends(require_auth),
+    session: Session = Depends(get_session),
+):
+    step = session.get(SequenceStep, step_id)
+    if step is None:
+        return HTMLResponse("Step not found", status_code=404)
+    sequence = session.get(Sequence, step.sequence_id)
+    contact = session.get(Contact, sequence.contact_id) if sequence else None
+    if contact is None:
+        return HTMLResponse("Contact not found", status_code=404)
+    save_step_feedback(session, contact, step, subject, body, feedback_note, save_as_example)
+    session.commit()
+    detail = load_contact_detail(session, contact.id)
+    if is_hx(request):
+        return templates.TemplateResponse("partials/sequence_panel.html", base_context(request, **detail))
+    set_flash(request, "Draft changes saved.", "success")
+    return RedirectResponse(f"/contacts/{contact.id}", status_code=303)
 
 
 @app.post("/steps/{step_id}/approve", response_class=HTMLResponse)
@@ -444,6 +715,7 @@ async def reply_assistant(
     if detail is None:
         return HTMLResponse("Contact not found", status_code=404)
     _, offer, _, _, compliance = get_singletons(session)
+    playbook, _, objections, _, _ = get_playbook_assets(session)
     handle_reply(
         session=session,
         ai_service=ai_service,
@@ -452,6 +724,8 @@ async def reply_assistant(
         reply_text=reply_text,
         offer=offer,
         compliance=compliance,
+        playbook=playbook,
+        objection_rules=objections,
     )
     session.commit()
     if is_hx(request):
@@ -507,8 +781,14 @@ def discovery_generate(
     session: Session = Depends(get_session),
 ):
     _, offer, icp, _, _ = get_singletons(session)
-    suggestions = ai_service.generate_discovery_suggestions(offer, icp, count=max(1, min(count, 10)))
+    playbook, _, _, proof_points, _ = get_playbook_assets(session)
+    suggestions = ai_service.generate_discovery_suggestions(
+        offer,
+        icp,
+        count=max(1, min(count, 10)),
+        playbook=playbook,
+        proof_points=proof_points,
+    )
     if is_hx(request):
         return templates.TemplateResponse("partials/discovery_results.html", base_context(request, suggestions=suggestions))
     return templates.TemplateResponse("discovery.html", base_context(request, offer=offer, icp=icp, suggestions=suggestions))
-

@@ -5,7 +5,17 @@ from collections.abc import Generator
 from sqlmodel import Session, SQLModel, create_engine, select
 
 from app.config import get_settings
-from app.models import AgencyProfile, ComplianceSettings, ICPProfile, OfferProfile, SequenceTemplate
+from app.models import (
+    AgencyProfile,
+    ComplianceSettings,
+    ICPProfile,
+    MessagingExample,
+    ObjectionRule,
+    OfferProfile,
+    ProofPoint,
+    SalesPlaybook,
+    SequenceTemplate,
+)
 
 settings = get_settings()
 
@@ -73,6 +83,43 @@ def init_db() -> None:
                     opt_out_text="If this is not relevant, reply and I will not follow up again.",
                     manual_review_required=True,
                     provenance_required=True,
+                )
+            )
+        if session.exec(select(SalesPlaybook)).first() is None:
+            session.add(
+                SalesPlaybook(
+                    positioning_summary="We act as a research-led SDR partner for SMB B2B teams that need more qualified conversations without building a large internal SDR function.",
+                    icp_summary="Best-fit accounts are Europe/UK B2B firms with a clear commercial owner, a defined offer, and inconsistent outbound pipeline generation.",
+                    persona_guidance="Speak to founders and revenue leaders as owners of pipeline quality, reply rates, and sales capacity. Keep the tone direct, commercially aware, and concise.",
+                    objection_handling="Address concerns around relevance, bandwidth, and risk by emphasizing research quality, human review, and low-friction next steps.",
+                    proof_points_summary="Use proof anchored in improved meeting creation, tighter personalization, and lower operator burden.",
+                    compliance_guardrails="Do not overclaim results. Keep messaging compliant, specific, and easy to opt out from.",
+                    tone_rules="Write like an experienced outbound operator: concise, informed, respectful, and commercially specific.",
+                )
+            )
+        if session.exec(select(MessagingExample)).first() is None:
+            session.add(
+                MessagingExample(
+                    channel="email",
+                    label="Founder intro",
+                    audience="Founder / CEO",
+                    content="We help lean commercial teams turn better-fit prospect research into more booked meetings without adding heavy SDR overhead.",
+                    outcome_hint="Use as a concise opening value proposition.",
+                    is_winning=True,
+                )
+            )
+        if session.exec(select(ObjectionRule)).first() is None:
+            session.add(
+                ObjectionRule(
+                    objection="We already do outbound internally.",
+                    response_guidance="Position the service as a way to improve research quality, message sharpness, and operator capacity rather than replacing the internal team.",
+                )
+            )
+        if session.exec(select(ProofPoint)).first() is None:
+            session.add(
+                ProofPoint(
+                    title="Human-reviewed personalization",
+                    detail="Every outbound touch is reviewed before it is sent, which keeps messaging relevant and compliance-safe.",
                 )
             )
         session.commit()

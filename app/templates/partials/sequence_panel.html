@@ -5,6 +5,10 @@
   {% endif %}
 </div>
 
+{% if tasks %}
+<p class="muted">Open review tasks: {{ tasks | selectattr("status", "equalto", "open") | list | length }}</p>
+{% endif %}
+
 {% if steps %}
 <div class="stack">
   {% for step in steps %}
@@ -16,11 +20,48 @@
       </div>
       <span class="pill">{{ step.status.value }}</span>
     </div>
+
+    {% if step.status.value in ["pending", "approved"] %}
+    <form
+      method="post"
+      action="/steps/{{ step.id }}/save-draft"
+      hx-post="/steps/{{ step.id }}/save-draft"
+      hx-target="#sequence-panel"
+      hx-swap="innerHTML"
+      class="form-grid top-gap"
+    >
+      <label>
+        <span>Subject</span>
+        <input type="text" name="subject" value="{{ step.subject }}">
+      </label>
+      <label>
+        <span>Body</span>
+        <textarea name="body" required>{{ step.body }}</textarea>
+      </label>
+      <label>
+        <span>Operator note</span>
+        <input type="text" name="feedback_note" placeholder="Why this edit improves the draft">
+      </label>
+      <label class="checkbox">
+        <input type="checkbox" name="save_as_example">
+        Save as approved example
+      </label>
+      <div class="actions-row">
+        <button type="submit" class="ghost-button">Save draft changes</button>
+      </div>
+    </form>
+    {% else %}
     {% if step.subject %}
     <p><strong>Subject:</strong> {{ step.subject }}</p>
     {% endif %}
     <pre>{{ step.body }}</pre>
-    <div class="actions-row">
+    {% if step.audit_note %}
+    <p class="muted">Audit note: {{ step.audit_note }}</p>
+    {% endif %}
+    {% endif %}
+
+    {% if step.status.value in ["pending", "approved"] %}
+    <div class="actions-row top-gap">
       {% if step.status.value == "pending" %}
       <form
         method="post"
@@ -46,6 +87,7 @@
       </form>
       {% endif %}
     </div>
+    {% endif %}
   </article>
   {% endfor %}
 </div>

@@ -91,6 +91,47 @@ class ComplianceSettings(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=utcnow)
 
 
+class SalesPlaybook(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    positioning_summary: str = Field(default="")
+    icp_summary: str = Field(default="")
+    persona_guidance: str = Field(default="")
+    objection_handling: str = Field(default="")
+    proof_points_summary: str = Field(default="")
+    compliance_guardrails: str = Field(default="")
+    tone_rules: str = Field(default="")
+    created_at: datetime = Field(default_factory=utcnow)
+    updated_at: datetime = Field(default_factory=utcnow)
+
+
+class MessagingExample(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    channel: str = Field(default="email", index=True)
+    label: str = Field(default="")
+    audience: str = Field(default="")
+    content: str = Field(default="")
+    outcome_hint: str = Field(default="")
+    is_winning: bool = Field(default=False, index=True)
+    created_at: datetime = Field(default_factory=utcnow)
+    updated_at: datetime = Field(default_factory=utcnow)
+
+
+class ObjectionRule(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    objection: str = Field(default="", index=True)
+    response_guidance: str = Field(default="")
+    created_at: datetime = Field(default_factory=utcnow)
+    updated_at: datetime = Field(default_factory=utcnow)
+
+
+class ProofPoint(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    title: str = Field(default="", index=True)
+    detail: str = Field(default="")
+    created_at: datetime = Field(default_factory=utcnow)
+    updated_at: datetime = Field(default_factory=utcnow)
+
+
 class LeadSource(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str = Field(index=True)
@@ -147,6 +188,51 @@ class ResearchBrief(SQLModel, table=True):
     generated_at: datetime = Field(default_factory=utcnow)
 
 
+class CompanyResearchBrief(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    account_id: int = Field(foreign_key="account.id", index=True)
+    summary: str = Field(default="")
+    icp_fit: str = Field(default="")
+    growth_stage_region: str = Field(default="")
+    service_relevance: str = Field(default="")
+    trigger_signals: str = Field(default="")
+    source_summary: str = Field(default="")
+    generated_at: datetime = Field(default_factory=utcnow)
+
+
+class ContactResearchBrief(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    contact_id: int = Field(foreign_key="contact.id", index=True)
+    role_summary: str = Field(default="")
+    persona_fit: str = Field(default="")
+    personalization_angles: str = Field(default="")
+    buying_pains: str = Field(default="")
+    source_summary: str = Field(default="")
+    generated_at: datetime = Field(default_factory=utcnow)
+
+
+class ResearchSource(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    account_id: int | None = Field(default=None, foreign_key="account.id", index=True)
+    contact_id: int | None = Field(default=None, foreign_key="contact.id", index=True)
+    source_kind: str = Field(default="internal", index=True)
+    title: str = Field(default="")
+    url: str = Field(default="")
+    snippet: str = Field(default="")
+    created_at: datetime = Field(default_factory=utcnow)
+
+
+class EvidenceSnippet(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    company_research_brief_id: int | None = Field(default=None, foreign_key="companyresearchbrief.id", index=True)
+    contact_research_brief_id: int | None = Field(default=None, foreign_key="contactresearchbrief.id", index=True)
+    research_source_id: int | None = Field(default=None, foreign_key="researchsource.id", index=True)
+    evidence_type: str = Field(default="fact", index=True)
+    snippet_text: str = Field(default="")
+    note: str = Field(default="")
+    created_at: datetime = Field(default_factory=utcnow)
+
+
 class Sequence(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     contact_id: int = Field(foreign_key="contact.id", index=True)
@@ -191,6 +277,27 @@ class ReplyEvent(SQLModel, table=True):
     reply_text: str = Field(default="")
     reply_intent: ReplyIntent = Field(default=ReplyIntent.NEUTRAL)
     suggested_response: str = Field(default="")
+    created_at: datetime = Field(default_factory=utcnow)
+
+
+class DraftFeedbackEvent(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    contact_id: int = Field(foreign_key="contact.id", index=True)
+    sequence_step_id: int | None = Field(default=None, foreign_key="sequencestep.id", index=True)
+    feedback_type: str = Field(default="draft_edit", index=True)
+    note: str = Field(default="")
+    created_at: datetime = Field(default_factory=utcnow)
+
+
+class ApprovedExample(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    contact_id: int | None = Field(default=None, foreign_key="contact.id", index=True)
+    sequence_step_id: int | None = Field(default=None, foreign_key="sequencestep.id", index=True)
+    channel: str = Field(default="email", index=True)
+    label: str = Field(default="")
+    subject: str = Field(default="")
+    body: str = Field(default="")
+    rationale: str = Field(default="")
     created_at: datetime = Field(default_factory=utcnow)
 
 

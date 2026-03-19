@@ -87,9 +87,13 @@ pre {
 }
 
 .sidebar {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  min-height: 100vh;
   padding: 2rem;
   border-right: 1px solid rgba(0, 0, 0, 0.08);
-  background: rgba(255, 250, 243, 0.78);
+  background: rgba(255, 250, 243, 0.84);
   backdrop-filter: blur(12px);
   display: flex;
   flex-direction: column;
@@ -104,13 +108,45 @@ pre {
 }
 
 .nav a {
-  padding: 0.7rem 0.9rem;
+  padding: 0.8rem 1rem;
   border-radius: 14px;
   background: rgba(30, 92, 77, 0.08);
+  border: 1px solid transparent;
+  transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+
+.nav a:hover,
+.nav a.active {
+  background: rgba(30, 92, 77, 0.18);
+  border-color: rgba(30, 92, 77, 0.25);
+  transform: translateX(2px);
 }
 
 .content {
   padding: 2rem;
+}
+
+.workspace-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 18px;
+  background: rgba(255, 250, 243, 0.78);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.workspace-home {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 96px;
+  padding: 0.7rem 1rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
 }
 
 .page {
@@ -131,6 +167,20 @@ pre {
 
 .section-header.compact {
   align-items: center;
+}
+
+.page-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.breadcrumbs {
+  display: flex;
+  gap: 0.45rem;
+  margin-bottom: 0.5rem;
+  color: var(--muted);
+  font-size: 0.92rem;
 }
 
 .eyebrow {
@@ -236,7 +286,9 @@ pre {
 
 .sequence-step,
 .reply-card,
-.suggestion-card {
+.suggestion-card,
+.source-card,
+.evidence-card {
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 18px;
   padding: 1rem;
@@ -302,6 +354,8 @@ td {
   }
 
   .sidebar {
+    position: static;
+    min-height: auto;
     border-right: none;
     border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   }
@@ -310,9 +364,10 @@ td {
   .actions-row,
   .inline-form,
   .section-header,
-  .sequence-head {
+  .sequence-head,
+  .page-actions,
+  .workspace-bar {
     flex-direction: column;
     align-items: stretch;
   }
 }
-

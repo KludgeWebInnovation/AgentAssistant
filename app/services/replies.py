@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from sqlmodel import Session
 
-from app.models import AuditEvent, Contact, LeadState, ReplyEvent, SequenceStep, utcnow
+from app.models import AuditEvent, Contact, DraftFeedbackEvent, LeadState, ReplyEvent, SequenceStep, utcnow
 from app.services.ai import OpenAIService
 from app.services.sequences import pause_contact
 
@@ -15,9 +15,19 @@ def handle_reply(
     reply_text: str,
     offer,
     compliance,
+    playbook=None,
+    objection_rules=None,
     step: SequenceStep | None = None,
 ) -> ReplyEvent:
-    suggestion = ai_service.suggest_reply(account_name, contact, reply_text, offer, compliance)
+    suggestion = ai_service.suggest_reply(
+        account_name,
+        contact,
+        reply_text,
+        offer,
+        compliance,
+        playbook=playbook,
+        objection_rules=objection_rules,
+    )
     event = ReplyEvent(
         contact_id=contact.id,
         sequence_step_id=step.id if step else None,
@@ -35,7 +45,14 @@ def handle_reply(
     else:
         pause_contact(session, contact, "Reply received; sequence paused for review.", LeadState.REPLIED)
     contact.last_activity_at = utcnow()
+    session.add(
+        DraftFeedbackEvent(
+            contact_id=contact.id,
+            sequence_step_id=step.id if step else None,
+            feedback_type=f"reply_{suggestion.intent.value}",
+            note=reply_text[:500],
+        )
+    )
     session.add(AuditEvent(contact_id=contact.id, event_type="reply_logged", detail=suggestion.intent.value))
     session.flush()
     return event
-

@@ -4,13 +4,23 @@
 <section class="page">
   <div class="section-header">
     <div>
+      <nav class="breadcrumbs">
+        <a href="/">Dashboard</a>
+        <span>/</span>
+        <a href="/contacts">Contacts</a>
+        <span>/</span>
+        <span>{{ contact.display_name }}</span>
+      </nav>
       <div class="eyebrow">Contact record</div>
       <h2>{{ contact.display_name }}</h2>
       <p class="muted">{{ account.company_name }} | {{ contact.job_title or "No title" }}</p>
     </div>
-    <form method="post" action="/contacts/{{ contact.id }}/generate">
-      <button type="submit">Generate research + sequence</button>
-    </form>
+    <div class="page-actions">
+      <a href="/contacts" class="ghost-button">Back to contacts</a>
+      <form method="post" action="/contacts/{{ contact.id }}/generate">
+        <button type="submit">Refresh research + sequence</button>
+      </form>
+    </div>
   </div>
 
   <div class="detail-grid">
@@ -48,11 +58,123 @@
   </div>
 
   <div class="detail-grid">
+    <section class="card">
+      <h3>Company research</h3>
+      {% if company_research %}
+      <p><strong>Summary:</strong> {{ company_research.summary }}</p>
+      <p><strong>ICP fit:</strong> {{ company_research.icp_fit }}</p>
+      <p><strong>Stage / region:</strong> {{ company_research.growth_stage_region }}</p>
+      <p><strong>Service relevance:</strong> {{ company_research.service_relevance }}</p>
+      <p><strong>Trigger signals:</strong> {{ company_research.trigger_signals }}</p>
+      <p><strong>Sources:</strong> {{ company_research.source_summary }}</p>
+      {% else %}
+      <p class="muted">No company research captured yet.</p>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <h3>Contact research</h3>
+      {% if contact_research %}
+      <p><strong>Role summary:</strong> {{ contact_research.role_summary }}</p>
+      <p><strong>Persona fit:</strong> {{ contact_research.persona_fit }}</p>
+      <p><strong>Angles:</strong> {{ contact_research.personalization_angles }}</p>
+      <p><strong>Likely pains:</strong> {{ contact_research.buying_pains }}</p>
+      <p><strong>Sources:</strong> {{ contact_research.source_summary }}</p>
+      {% else %}
+      <p class="muted">No contact research captured yet.</p>
+      {% endif %}
+    </section>
+  </div>
+
+  <div class="detail-grid">
+    <section class="card">
+      <h3>Draft drivers</h3>
+      {% if research_drivers %}
+      <div class="stack">
+        {% for item in research_drivers %}
+        <article class="evidence-card">
+          <strong>{{ item.evidence_type }}</strong>
+          <p>{{ item.snippet_text }}</p>
+          <p class="muted">{{ item.note }}</p>
+        </article>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="muted">No draft-driving evidence recorded yet.</p>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <h3>Research sources</h3>
+      {% if research_sources %}
+      <div class="stack">
+        {% for item in research_sources %}
+        <article class="source-card">
+          <strong>{{ item.title }}</strong>
+          {% if item.url %}
+          <p><a href="{{ item.url }}" target="_blank" rel="noreferrer">{{ item.url }}</a></p>
+          {% endif %}
+          <p class="muted">{{ item.source_kind }}</p>
+          <p>{{ item.snippet }}</p>
+        </article>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="muted">No research sources stored yet.</p>
+      {% endif %}
+    </section>
+  </div>
+
+  <div class="detail-grid">
     <section class="card" id="sequence-panel">
       {% include "partials/sequence_panel.html" %}
     </section>
     <section class="card" id="reply-panel">
       {% include "partials/reply_panel.html" %}
+    </section>
+  </div>
+
+  <div class="detail-grid">
+    <section class="card">
+      <h3>Feedback loop</h3>
+      {% if feedback_events %}
+      <div class="stack">
+        {% for item in feedback_events %}
+        <article class="reply-card">
+          <div class="sequence-head">
+            <strong>{{ item.feedback_type }}</strong>
+            <span class="muted">{{ item.created_at }}</span>
+          </div>
+          <p>{{ item.note }}</p>
+        </article>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="muted">No feedback events logged yet.</p>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <h3>Approved examples</h3>
+      {% if approved_examples %}
+      <div class="stack">
+        {% for item in approved_examples %}
+        <article class="sequence-step">
+          <div class="sequence-head">
+            <strong>{{ item.label or "Saved draft" }}</strong>
+            <span class="pill">{{ item.channel }}</span>
+          </div>
+          {% if item.subject %}
+          <p><strong>Subject:</strong> {{ item.subject }}</p>
+          {% endif %}
+          <pre>{{ item.body }}</pre>
+          <p class="muted">{{ item.rationale }}</p>
+        </article>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="muted">No approved examples saved for this contact yet.</p>
+      {% endif %}
     </section>
   </div>
 </section>

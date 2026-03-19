@@ -17,11 +17,12 @@
       </div>
       {% if current_user %}
       <nav class="nav">
-        <a href="/">Dashboard</a>
-        <a href="/contacts">Contacts</a>
-        <a href="/imports">Imports</a>
-        <a href="/discovery">Discovery</a>
-        <a href="/settings">Settings</a>
+        <a href="/" class="{% if current_path == '/' %}active{% endif %}">Dashboard</a>
+        <a href="/contacts" class="{% if current_path.startswith('/contacts') %}active{% endif %}">Contacts</a>
+        <a href="/imports" class="{% if current_path.startswith('/imports') %}active{% endif %}">Imports</a>
+        <a href="/discovery" class="{% if current_path.startswith('/discovery') %}active{% endif %}">Discovery</a>
+        <a href="/playbook" class="{% if current_path.startswith('/playbook') %}active{% endif %}">Playbook</a>
+        <a href="/settings" class="{% if current_path.startswith('/settings') %}active{% endif %}">Settings</a>
       </nav>
       <form method="post" action="/logout" class="logout-form">
         <button class="ghost-button" type="submit">Sign out</button>
@@ -29,6 +30,12 @@
       {% endif %}
     </aside>
     <main class="content">
+      {% if current_user %}
+      <div class="workspace-bar">
+        <a href="/" class="workspace-home">Home</a>
+        <div class="muted">Dashboard is always available from here and the left navigation.</div>
+      </div>
+      {% endif %}
       {% if flash %}
       <div class="flash flash-{{ flash.level }}">{{ flash.message }}</div>
       {% endif %}
@@ -37,4 +44,3 @@
   </div>
 </body>
 </html>
-

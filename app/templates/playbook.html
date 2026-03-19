@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="page">
+  <div class="section-header">
+    <div>
+      <div class="eyebrow">Training layer</div>
+      <h2>Playbook</h2>
+      <p class="muted">Teach the agent what you sell, how you position it, and what "good" looks like.</p>
+    </div>
+  </div>
+
+  <form method="post" action="/playbook" class="settings-grid">
+    <section class="card form-grid">
+      <h3>Core playbook</h3>
+      <label><span>Positioning summary</span><textarea name="positioning_summary">{{ playbook.positioning_summary }}</textarea></label>
+      <label><span>ICP summary</span><textarea name="icp_summary">{{ playbook.icp_summary }}</textarea></label>
+      <label><span>Persona guidance</span><textarea name="persona_guidance">{{ playbook.persona_guidance }}</textarea></label>
+      <label><span>Objection handling</span><textarea name="objection_handling">{{ playbook.objection_handling }}</textarea></label>
+      <label><span>Proof points summary</span><textarea name="proof_points_summary">{{ playbook.proof_points_summary }}</textarea></label>
+      <label><span>Compliance guardrails</span><textarea name="compliance_guardrails">{{ playbook.compliance_guardrails }}</textarea></label>
+      <label><span>Tone rules</span><textarea name="tone_rules">{{ playbook.tone_rules }}</textarea></label>
+      <div class="actions-row">
+        <button type="submit">Save playbook</button>
+      </div>
+    </section>
+  </form>
+
+  <div class="settings-grid">
+    <section class="card">
+      <h3>Messaging examples</h3>
+      <form method="post" action="/playbook/examples" class="form-grid">
+        <label><span>Channel</span><input type="text" name="channel" value="email" required></label>
+        <label><span>Label</span><input type="text" name="label" required></label>
+        <label><span>Audience</span><input type="text" name="audience"></label>
+        <label><span>Content</span><textarea name="content" required></textarea></label>
+        <label><span>Outcome hint</span><input type="text" name="outcome_hint"></label>
+        <label class="checkbox"><input type="checkbox" name="is_winning">Mark as winning example</label>
+        <button type="submit">Add example</button>
+      </form>
+      {% if examples %}
+      <div class="stack top-gap">
+        {% for item in examples %}
+        <article class="sequence-step">
+          <div class="sequence-head">
+            <strong>{{ item.label }}</strong>
+            <span class="pill">{{ item.channel }}</span>
+          </div>
+          <p class="muted">{{ item.audience }}</p>
+          <pre>{{ item.content }}</pre>
+          {% if item.outcome_hint %}
+          <p><strong>Use for:</strong> {{ item.outcome_hint }}</p>
+          {% endif %}
+          <form method="post" action="/playbook/examples/{{ item.id }}/delete">
+            <button type="submit" class="ghost-button">Remove</button>
+          </form>
+        </article>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <h3>Objection rules</h3>
+      <form method="post" action="/playbook/objections" class="form-grid">
+        <label><span>Objection</span><input type="text" name="objection" required></label>
+        <label><span>Response guidance</span><textarea name="response_guidance" required></textarea></label>
+        <button type="submit">Add objection rule</button>
+      </form>
+      {% if objections %}
+      <div class="stack top-gap">
+        {% for item in objections %}
+        <article class="reply-card">
+          <strong>{{ item.objection }}</strong>
+          <p>{{ item.response_guidance }}</p>
+          <form method="post" action="/playbook/objections/{{ item.id }}/delete">
+            <button type="submit" class="ghost-button">Remove</button>
+          </form>
+        </article>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <h3>Proof points</h3>
+      <form method="post" action="/playbook/proof-points" class="form-grid">
+        <label><span>Title</span><input type="text" name="title" required></label>
+        <label><span>Detail</span><textarea name="detail" required></textarea></label>
+        <button type="submit">Add proof point</button>
+      </form>
+      {% if proof_points %}
+      <div class="stack top-gap">
+        {% for item in proof_points %}
+        <article class="reply-card">
+          <strong>{{ item.title }}</strong>
+          <p>{{ item.detail }}</p>
+          <form method="post" action="/playbook/proof-points/{{ item.id }}/delete">
+            <button type="submit" class="ghost-button">Remove</button>
+          </form>
+        </article>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <h3>Approved examples</h3>
+      {% if approved_examples %}
+      <div class="stack">
+        {% for item in approved_examples %}
+        <article class="sequence-step">
+          <div class="sequence-head">
+            <strong>{{ item.label or "Saved draft" }}</strong>
+            <span class="pill">{{ item.channel }}</span>
+          </div>
+          {% if item.subject %}
+          <p><strong>Subject:</strong> {{ item.subject }}</p>
+          {% endif %}
+          <pre>{{ item.body }}</pre>
+          <p class="muted">{{ item.rationale }}</p>
+        </article>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="muted">Approved examples appear here when you save draft changes from a contact record.</p>
+      {% endif %}
+    </section>
+  </div>
+</section>
+{% endblock %}

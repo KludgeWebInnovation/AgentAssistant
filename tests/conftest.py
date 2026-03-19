@@ -3,10 +3,14 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy.pool import StaticPool
 from sqlmodel import Session, SQLModel, create_engine
 
+from app.db import get_session as runtime_get_session
+from app.main import app
 from app.models import AgencyProfile, ComplianceSettings, ICPProfile, OfferProfile, SequenceTemplate
+from app.models import MessagingExample, ObjectionRule, ProofPoint, SalesPlaybook
 
 
 @pytest.fixture
@@ -60,6 +64,39 @@ def session():
                 provenance_required=True,
             )
         )
+        session.add(
+            SalesPlaybook(
+                positioning_summary="Signal Ops helps B2B teams run research-led outbound without heavy internal SDR hiring.",
+                icp_summary="Focus on Europe/UK B2B service and software teams with inconsistent pipeline creation.",
+                persona_guidance="Write for founders and heads of sales who own pipeline quality.",
+                objection_handling="Reduce perceived risk with specificity and low-friction next steps.",
+                proof_points_summary="Use proof anchored in booked meetings and better-fit personalization.",
+                compliance_guardrails="Avoid overclaiming and keep opt-out language intact.",
+                tone_rules="Keep it concise, grounded, and commercially clear.",
+            )
+        )
+        session.add(
+            MessagingExample(
+                channel="email",
+                label="Founder opener",
+                audience="Founder",
+                content="We help lean B2B teams improve outbound quality without building a large SDR team.",
+                outcome_hint="Use as the first sentence in an intro email.",
+                is_winning=True,
+            )
+        )
+        session.add(
+            ObjectionRule(
+                objection="We already do outbound in-house.",
+                response_guidance="Position the service as a quality and capacity layer for the existing team.",
+            )
+        )
+        session.add(
+            ProofPoint(
+                title="Booked meetings from tighter research",
+                detail="Teams use the workflow to ground outreach in better-fit account context before sending.",
+            )
+        )
         session.commit()
         yield session
 
@@ -68,3 +105,13 @@ def session():
 def fixtures_dir() -> Path:
     return Path(__file__).parent / "fixtures"
 
+
+@pytest.fixture
+def client(session):
+    def override_get_session():
+        yield session
+
+    app.dependency_overrides[runtime_get_session] = override_get_session
+    with TestClient(app) as test_client:
+        yield test_client
+    app.dependency_overrides.clear()
